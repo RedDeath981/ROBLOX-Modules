@@ -29,7 +29,26 @@ local TweenModuleNew = Module:new("Tween1"):CreateTween(Object, TweenInformation
 
 *Returns > metatable { methods }*
 
-### CreateTween:stop
+### CreateTween:begin
+#### Arguments
+*- DelayTime > Number* <br />
+
+**WARNING: ALWAYS PUT BEFORE :play() IF YOU PLAN ON USING IT**
+```lua
+local Module = require(path.to.module)
+
+local TweenModuleNew = Module:new("Tween1"):CreateTween(Object, TweenInformation, Goals)
+  :begin(function(Playback)
+    print("Tween Loaded")
+  end):play(3) -- Wait's 3 seconds after tween started and then stops it ( If NIL then will wait 0 seconds)
+```
+
+*Returns > metatable { methods }*
+
+
+*Returns > metatable { methods }*
+
+### CreateTween:play
 #### Arguments
 *- DelayTime > Number* <br />
 
@@ -37,10 +56,8 @@ local TweenModuleNew = Module:new("Tween1"):CreateTween(Object, TweenInformation
 local Module = require(path.to.module)
 
 local TweenModuleNew = Module:new("Tween1"):CreateTween(Object, TweenInformation, Goals)
-  :play(3):stop(3) -- Wait's 3 seconds after tween started and then stops it ( If NIL then will wait 0 seconds)
+  :play(3) -- Wait's 3 seconds before running the tween ( If NIL then will wait 0 seconds)
 ```
-
-*Returns > metatable { methods }*
 
 ### play:started()
 #### Arguments
@@ -127,22 +144,6 @@ local TweenModuleNew = Module:new("Tween1"):CreateTween(Object, TweenInformation
 
 *Returns > metatable { methods }*
 
-### play:begin()
-#### Arguments
-*- Callback > Function* <br />
-*- ... > Any* <br />
-
-```lua
-local Module = require(path.to.module)
-
-local TweenModuleNew = Module:new("Tween1"):CreateTween(Object, TweenInformation, Goals)
-  :play(3):begin(function(Playback)
-    print(Playback) -- Prints "Enum.PlaybackState.Begin
-  end) -- Keeps invoking before Tween is playing via :play
-```
-
-*Returns > metatable { methods }*
-
 ### play:cancelled()
 #### Arguments
 *- Callback > Function* <br />
@@ -159,7 +160,7 @@ local TweenModuleNew = Module:new("Tween1"):CreateTween(Object, TweenInformation
 
 *Returns > metatable { methods }*
 
-### play:cancelled()
+### play:getTween()
 #### Arguments
 *- Callback > Function* <br />
 *- ... > Any* <br />
