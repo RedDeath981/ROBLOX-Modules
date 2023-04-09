@@ -45,9 +45,6 @@ local TweenModuleNew = Module:new("Tween1"):CreateTween(Object, TweenInformation
 
 *Returns > metatable { methods }*
 
-
-*Returns > metatable { methods }*
-
 ### CreateTween:play
 #### Arguments
 *- DelayTime > Number* <br />
