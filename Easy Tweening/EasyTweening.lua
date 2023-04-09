@@ -77,7 +77,6 @@ function BTCons:CreateTween(Object: Instance, TweenInformation: TweenInfo, Goal:
 end
 
 local played = Instance.new('BoolValue')
-played.Value = false
 
 function BTFunctionsPlayed:completed(Callback, ...)
 	local Tween = self._tween
@@ -143,6 +142,9 @@ function BTFunctionsPlayed:cancelled(Callback, ...)
 end
 
 function BTFunctionsPlayed:stop(StopDelay: number)
+	if played.Value == false then
+		repeat wait() until played.Value == true
+	end
 	StopDelay = StopDelay or 0
 	local Found, Data, Index = FindThreadInTable(self._name)
 
@@ -153,6 +155,23 @@ function BTFunctionsPlayed:stop(StopDelay: number)
 	task.delay(StopDelay, function()
 		Threads[Index]._Status = "Cancelled"
 		self._tween:Cancel()
+		table.remove(Threads, Index)
+	end)
+
+	return setmetatable(self, BTFunctionsPlayed)
+end
+
+function BTFunctionsPlayed:pause(PauseDelay: number)
+	PauseDelay = PauseDelay or 0
+	local Found, Data, Index = FindThreadInTable(self._name)
+
+	assert(Found == true, "Thread was not found.")
+	assert(type(PauseDelay) == "number", "Argument #1 \"StopDelay\" should be a number.")
+	assert(self._tween.ClassName == "Tween" and typeof(self._tween) == "Instance", "Tween is not existing or nil.")
+
+	task.delay(PauseDelay, function()
+		Threads[Index]._Status = "Cancelled"
+		self._tween:Pause()
 		table.remove(Threads, Index)
 	end)
 
@@ -212,6 +231,7 @@ function BTFunctionsPlayed:started(Callback, ...)
 	end
 	
 	played:GetPropertyChangedSignal('Value'):Connect(function()
+		print(played.Value)
 		if played.Value == true then
 			table.insert(Data._connections, 'started')
 			Callback(args)
@@ -294,46 +314,6 @@ function BTFunctionsPlayed:delayed(Callback, ...)
 	return setmetatable(self, BTFunctionsPlayed)
 end
 
-function BTFunctionsPlayed:begin(Callback, ...)
-	local Tween = self._tween
-	local args = ...
-	assert(type(Callback) == "function", "Argument #1 \"Callback\" should be a function.")
-	assert(Tween.ClassName == "Tween" and typeof(Tween) == "Instance", "Argument #1 \"Tween\" should be a Tween")
-
-	local Found, Data = FindThreadInTable(self._name)
-
-	if table.find(Data._connections, 'begin') then
-		error("Function: 'Begin' is already connected.", 1)
-		return
-	end
-	assert(Found == true, ("%s is not a valid thread"):format(self._name))
-	table.insert(Data._connections, 'begin')
-
-	local BeginFunction = function(Tween)
-		while true do
-			local Found, Data = FindThreadInTable(self._name)
-			
-			if Found == false then
-				warn(("%s is not a valid thread"):format(self._name))
-				break
-			end
-			
-			local Playback = Tween.PlaybackState
-
-			if Playback == Enum.PlaybackState.Begin then
-				Data._Status = Tween.PlaybackState.Name
-				Callback(Playback, args)
-				task.wait()
-			end
-			task.wait()
-		end
-	end
-
-	task.spawn(BeginFunction, Tween)
-
-	return setmetatable(self, BTFunctionsPlayed)
-end
-
 function BTFunctions:play(StartDelay: number)
 
 	StartDelay = StartDelay or 0
@@ -348,6 +328,39 @@ function BTFunctions:play(StartDelay: number)
 	self._name = self._name
 
 	return setmetatable(self, BTFunctionsPlayed)
+end
+
+function BTFunctions:begin(Callback, ...)
+	local Tween = self._tween
+	local args = ...
+	assert(type(Callback) == "function", "Argument #1 \"Callback\" should be a function.")
+	assert(Tween.ClassName == "Tween" and typeof(Tween) == "Instance", "Argument #1 \"Tween\" should be a Tween")
+
+	local Found, Data = FindThreadInTable(self._name)
+
+	if table.find(Data._connections, 'begin') then
+		error("Function: 'Begin' is already connected.", 1)
+		return
+	end
+	assert(Found == true, ("%s is not a valid thread"):format(self._name))
+	table.insert(Data._connections, 'begin')
+
+	local BeginFunction = function()
+		local Found, Data = FindThreadInTable(self._name)
+
+		assert(Found == true, ("%s is not a valid thread"):format(self._name))
+		
+		local Playback = Tween.PlaybackState
+
+		if Playback == Enum.PlaybackState.Begin then
+			Data._Status = Tween.PlaybackState.Name
+			Callback(Playback, args)
+		end
+	end
+
+	BeginFunction(Tween)
+
+	return setmetatable(self, BTFunctions)
 end
 
 function BTFunctionsPlayed:getTween()
