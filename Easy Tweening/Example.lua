@@ -15,7 +15,12 @@ local Object = workspace.Baseplate
 
 --// Methods \\--
 local EasyTweeningNew = EasyTweening:new('Baseplate Tween') -- Thread Name
-local Tween = EasyTweeningNew:CreateTween(Object, TweenInformation, Goals):play(4):started(function(Data) 
+local Tween = EasyTweeningNew:CreateTween(Object, TweenInformation, Goals)begin(function(Playback, Func)
+		print("Tween Loaded [Runs once before :play() invoked")
+		Func()
+	end, function()
+		print('This is the "Func" variable in :begin()') 
+	end):play(4):started(function(Data) 
 		print('Tween Started [Invoked :play()]', Data) 
 	end, "!"):completed(function(Playback, Number)
 		print('Tween Completed [Tween Ended]', Number)
@@ -23,12 +28,7 @@ local Tween = EasyTweeningNew:CreateTween(Object, TweenInformation, Goals):play(
 		print("Tween Playing [While it's running]", InstanceName)
 	end, Object.Name):delayed(function(Playback, String)
 		print("Tween Delayed [Hasn't ran yet due to \"Delay\" variable in TweenInfo", String)
-	end, "Hello"):begin(function(Playback, Func)
-		print("Tween Began [Keeps running before :Play() invoked")
-		Func()
-	end, function()
-		print('This is the "Func" variable in :begin()') 
-	end):getTween()
+	end, "Hello"):stop(2):getTween()
 
 print(Tween.Instance) -- Prints "Baseplate"
 
