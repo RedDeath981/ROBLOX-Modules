@@ -14,14 +14,32 @@ local Module = require(path.to.module)
 local TweenModuleNew = Module:new("Tween1"):CreateTween(Object, TweenInformation, Goals)
 ```
 
-*Returns > metatable { methods }*
+### Module.getTimeToGoal
+#### Arguments
+*- Tween > Tween* (OPTIONAL) <br />
+
+```lua
+local Module = require(path.to.module)
+
+local TweenModuleNew = Module:new("Tween1"):CreateTween(Object, TweenInformation, Goals):play():playing(function(Playback)
+  local Time = Module.getTimeToGoal() -- Goes between 0 and 1
+  
+  if tostring(Time):sub(1, 3) == "0.5" then
+    print("Tween is halfway done!")
+  elseif tostring(Time):sub(1, 1) == "1" then
+    print("Tween is complete!")
+  end
+end)
+```
+
+*Returns > Number*
 
 ### CreateTween:play
 #### Arguments
 *- DelayTime > Number* <br />
 
 ```lua
-local Module = require(path.to.module)
+local Module = (path.to.module)
 
 local TweenModuleNew = Module:new("Tween1"):CreateTween(Object, TweenInformation, Goals)
   :play(3) -- Wait's 3 seconds before running the tween ( If NIL then will wait 0 seconds)
@@ -71,6 +89,22 @@ local TweenModuleNew = Module:new("Tween1"):CreateTween(Object, TweenInformation
 ```
 
 *Returns > metatable { methods }*
+
+### play:delay()
+#### Arguments
+*- Time > Number* <br />
+*- Callback > Function* <br />
+
+```lua
+local Module = require(path.to.module)
+
+local TweenModuleNew = Module:new("Tween1"):CreateTween(Object, TweenInformation, Goals)
+  :play(3):delay(1.5, function(arg) -- runs halfway through tween
+    local Time = Module.getTimeToGoal()
+    
+    print(arg, Time) -- Prints a number around 0.5
+  end, "Tween Position: ")
+```
 
 ### play:completed()
 #### Arguments
