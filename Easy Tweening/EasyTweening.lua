@@ -2,6 +2,8 @@ local Tweenservice = game:GetService('TweenService')
 local BT = {}
 BT.__index = BT
 
+local StartTime = 0
+
 local BTCons = {}
 BTCons.__index = BTCons
 
@@ -10,6 +12,8 @@ BTFunctions.__index = BTFunctions
 local BTFunctionsPlayed = {}
 BTFunctionsPlayed.__index = BTFunctionsPlayed
 local Threads = {}
+
+local delayed = Instance.new('BoolValue')
 
 function BT:new(ThreadName: string)
 	assert(type(ThreadName) == 'string', "Argument #1 \"ThreadName\" should be a string.")
@@ -72,6 +76,20 @@ function BTCons:CreateTween(Object: Instance, TweenInformation: TweenInfo, Goal:
 	
 	local Tween = Tweenservice:Create(Object, TweenInformation, Goal)
 	self._tween = Tween
+	Tween:GetPropertyChangedSignal('PlaybackState'):Connect(function()
+		if Tween.PlaybackState == Enum.PlaybackState.Playing then
+			StartTime = tick()
+			delayed.Value = false
+		elseif Tween.PlaybackState == Enum.PlaybackState.Delayed then
+			delayed.Value = true
+		end
+	end)
+	local t = {}
+	t._tween = self._tween or Tween
+	t._name = self._name
+
+	--setmetatable(t, BTCons)
+	setmetatable(BTCons, t)
 	
 	return setmetatable(self, BTFunctions)
 end
@@ -80,7 +98,7 @@ local played = Instance.new('BoolValue')
 
 function BTFunctionsPlayed:completed(Callback, ...)
 	local Tween = self._tween
-	local args = ...
+	local args = {...}
 	assert(type(Callback) == "function", "Argument #1 \"Callback\" should be a function.")
 	assert(Tween.ClassName == "Tween" and typeof(Tween) == "Instance", "Argument #1 \"Tween\" should be a Tween")
 
@@ -100,7 +118,7 @@ function BTFunctionsPlayed:completed(Callback, ...)
 		end
 		if Playback == Enum.PlaybackState.Completed then
 			Data._Status = Tween.PlaybackState.Name
-			Callback(Playback, args)
+			Callback(Playback, table.unpack(args))
 		end
 	end
 
@@ -111,7 +129,7 @@ end
 
 function BTFunctionsPlayed:cancelled(Callback, ...)
 	local Tween = self._tween
-	local args = ...
+	local args = {...}
 	assert(type(Callback) == "function", "Argument #1 \"Callback\" should be a function.")
 	assert(Tween.ClassName == "Tween" and typeof(Tween) == "Instance", "Argument #1 \"Tween\" should be a Tween")
 
@@ -132,7 +150,7 @@ function BTFunctionsPlayed:cancelled(Callback, ...)
 		end
 		if Playback == Enum.PlaybackState.Cancelled then
 			Data._Status = Tween.PlaybackState.Name
-			Callback(Playback, args)
+			Callback(Playback, table.unpack(args))
 		end
 	end
 
@@ -180,7 +198,7 @@ end
 
 function BTFunctionsPlayed:playing(Callback, ...)
 	local Tween = self._tween
-	local args = ...
+	local args = {...}
 	assert(type(Callback) == "function", "Argument #1 \"Callback\" should be a function.")
 	assert(Tween.ClassName == "Tween" and typeof(Tween) == "Instance", "Argument #1 \"Tween\" should be a Tween")
 
@@ -205,7 +223,7 @@ function BTFunctionsPlayed:playing(Callback, ...)
 			
 			if Playback == Enum.PlaybackState.Playing then
 				Data._Status = Tween.PlaybackState.Name
-				Callback(Playback, args)
+				Callback(Playback, table.unpack(args))
 				task.wait()
 			end
 			task.wait()
@@ -219,7 +237,7 @@ end
 
 function BTFunctionsPlayed:started(Callback, ...)
 	local Tween = self._tween
-	local args = ...
+	local args = {...}
 	assert(type(Callback) == "function", "Argument #1 \"Callback\" should be a function.")
 	assert(Tween.ClassName == "Tween" and typeof(Tween) == "Instance", "Argument #1 \"Tween\" should be a Tween")
 
@@ -231,10 +249,9 @@ function BTFunctionsPlayed:started(Callback, ...)
 	end
 	
 	played:GetPropertyChangedSignal('Value'):Connect(function()
-		print(played.Value)
 		if played.Value == true then
 			table.insert(Data._connections, 'started')
-			Callback(args)
+			Callback(table.unpack(args))
 		end
 	end)
 
@@ -243,7 +260,7 @@ end
 
 function BTFunctionsPlayed:paused(Callback, ...)
 	local Tween = self._tween
-	local args = ...
+	local args = {...}
 	assert(type(Callback) == "function", "Argument #1 \"Callback\" should be a function.")
 	assert(Tween.ClassName == "Tween" and typeof(Tween) == "Instance", "Argument #1 \"Tween\" should be a Tween")
 
@@ -266,7 +283,7 @@ function BTFunctionsPlayed:paused(Callback, ...)
 
 		if Playback == Enum.PlaybackState.Playing then
 			Data._Status = Tween.PlaybackState.Name
-			Callback(Playback, args)
+			Callback(Playback, table.unpack(args))
 		end
 	end
 
@@ -277,7 +294,7 @@ end
 
 function BTFunctionsPlayed:delayed(Callback, ...)
 	local Tween = self._tween
-	local args = ...
+	local args = {...}
 	assert(type(Callback) == "function", "Argument #1 \"Callback\" should be a function.")
 	assert(Tween.ClassName == "Tween" and typeof(Tween) == "Instance", "Argument #1 \"Tween\" should be a Tween")
 
@@ -301,8 +318,9 @@ function BTFunctionsPlayed:delayed(Callback, ...)
 			local Playback = Tween.PlaybackState
 
 			if Playback == Enum.PlaybackState.Delayed then
+				delayed.Value = true
 				Data._Status = Tween.PlaybackState.Name
-				Callback(Playback, args)
+				Callback(Playback, table.unpack(args))
 				task.wait()
 			end
 			task.wait()
@@ -332,7 +350,7 @@ end
 
 function BTFunctions:begin(Callback, ...)
 	local Tween = self._tween
-	local args = ...
+	local args = {...}
 	assert(type(Callback) == "function", "Argument #1 \"Callback\" should be a function.")
 	assert(Tween.ClassName == "Tween" and typeof(Tween) == "Instance", "Argument #1 \"Tween\" should be a Tween")
 
@@ -354,7 +372,7 @@ function BTFunctions:begin(Callback, ...)
 
 		if Playback == Enum.PlaybackState.Begin then
 			Data._Status = Tween.PlaybackState.Name
-			Callback(Playback, args)
+			Callback(Playback, table.unpack(args))
 		end
 	end
 
@@ -363,9 +381,61 @@ function BTFunctions:begin(Callback, ...)
 	return setmetatable(self, BTFunctions)
 end
 
+function BTFunctionsPlayed:delay(Time: number, Callback, ...)
+	local args = {...}
+	assert(type(Time) == 'number', "Argument #1 \"Time\" should be a number.")
+	assert(typeof(Callback) == 'function', "Argument #1 \"Time\" should be a function.")
+	
+	if played.Value == false then
+		repeat wait() until played.Value == true
+	end
+
+	if delayed.Value == true then
+		repeat wait() until delayed.Value == false
+	end
+	
+	task.delay(Time, function()
+		Callback(table.unpack(args))
+	end)
+	
+	return setmetatable(self, BTFunctionsPlayed)
+end
+
 function BTFunctionsPlayed:getTween()
 	assert(self._tween.ClassName == "Tween" and typeof(self._tween) == "Instance", "\"module:getTween\" failed because \"self._tween\" is not a class type of Tween.")
 	return self._tween
+end
+
+function BT.getTimeToGoal(Tween: Tween)
+	if getmetatable(BTCons)._name == nil then
+		warn("_name not found")
+		return
+	end
+	local Found, Data = FindThreadInTable(getmetatable(BTCons)._name)
+	
+	if not Found then
+		warn("Thread not found in table.")
+		return
+	end
+	
+	if Tween == nil then
+		if getmetatable(BTCons)._tween ~= nil then
+			Tween = getmetatable(BTCons)._tween
+		else
+			warn("Tween doesn't exist.")
+			return
+		end
+	end
+	
+	assert(Tween.ClassName == "Tween" and typeof(Tween) == "Instance", "Argument #1 \"Tween\" should be a class type of Tween.")
+	
+	local FinishTime = 0
+	
+	FinishTime = tick()
+	
+	local timeleft = math.clamp(((FinishTime - StartTime) / getmetatable(BTCons)._tween.TweenInfo.Time), 0, 1)
+	
+	return timeleft
 end
 
 return BT
